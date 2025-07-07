@@ -1,0 +1,9 @@
+appsettings.json
+appsettings.Development.json
+**/bin/Debug/**/appsettings.json
+**/bin/Release/**/appsettings.json
+bin/
+obj/
+.vscode/
+
+/**/NuGet.config
