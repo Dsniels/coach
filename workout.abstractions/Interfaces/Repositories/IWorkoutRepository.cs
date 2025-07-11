@@ -4,7 +4,8 @@ namespace workout.abstractions.Interfaces;
 
 public interface IWorkoutRepository
 {
-    Task<int> CreateWorkout(Workout workout);
-    Task<int> DeleteWorkout(int id);
-    Task<IReadOnlyCollection<Workout>> GetWorkouts(string UserId);
+    Task<int> CreateWorkoutAsync(Workout workout);
+    Task<int> DeleteWorkoutAsync(Workout workout);
+    Task<IReadOnlyCollection<Workout>> GetWorkoutsAsync(string UserId);
+    Task<int> SaveChangesAsync();
 }
