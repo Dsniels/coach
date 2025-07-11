@@ -2,19 +2,36 @@ using System;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebSockets;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
 using Microsoft.IdentityModel.Tokens;
 using workout.abstractions.Entities;
+using workout.abstractions.Interfaces;
+using workout.abstractions.Interfaces.Services;
 using workout.logic.Context;
+using workout.logic.Repositories;
+using workout.logic.Services;
 
 namespace workout.app.ServicesCollections;
 
 public static class ServiceCollectionExtensions
 {
 
-    public static IServiceCollection AddDbContext(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddServices(this IServiceCollection services)
+    {
+        services.AddScoped<IWorkoutRepository, WorkoutRepository>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IModelService, ModelService>();
+        services.AddChatClient(new OllamaChatClient("http://localhost:11434", "qwen3:1.7b")).UseFunctionInvocation().Build();
+        return services;
+    }
+
+
+    public static IServiceCollection AddInfrastucture(this IServiceCollection services, IConfiguration config)
     {
         var connectionString = config.GetConnectionString("database");
+        services.AddSignalR();
         services.AddDbContext<WorkoutDbContext>(opts => opts.UseNpgsql(connectionString));
         return services;
     }
@@ -25,8 +42,7 @@ public static class ServiceCollectionExtensions
         builder = new IdentityBuilder(builder.UserType, builder.Services);
         builder.AddRoles<IdentityRole>();
         builder.AddEntityFrameworkStores<WorkoutDbContext>();
-        builder.AddRoleManager<IdentityRole>();
-        builder.AddSignInManager<User>();
+        builder.AddSignInManager<SignInManager<User>>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(opts =>
         {

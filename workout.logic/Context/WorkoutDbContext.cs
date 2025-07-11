@@ -7,7 +7,7 @@ namespace workout.logic.Context;
 public class WorkoutDbContext : IdentityDbContext<User>
 {
     public WorkoutDbContext(DbContextOptions<WorkoutDbContext> opts) : base(opts) { }
-    public required DbSet<Workout> Workouts { get; set; }
+    public  DbSet<Workout> Workouts { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder builder)
