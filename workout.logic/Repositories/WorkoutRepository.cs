@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using workout.abstractions.Entities;
 using workout.abstractions.Interfaces;
+using workout.abstractions.Specifications;
 using workout.logic.Context;
+using workout.logic.Specifications;
 
 namespace workout.logic.Repositories;
 
@@ -15,10 +17,9 @@ public class WorkoutRepository : IWorkoutRepository
         _db = context.Set<Workout>();
 
     }
-    public async Task<int> CreateWorkoutAsync(Workout workout)
+    public async Task CreateWorkoutAsync(Workout workout)
     {
         await _db.AddAsync(workout);
-        return await this.SaveChangesAsync();
     }
 
     public async Task<int> DeleteWorkoutAsync(Workout workout)
@@ -30,6 +31,16 @@ public class WorkoutRepository : IWorkoutRepository
     public async Task<IReadOnlyCollection<Workout>> GetWorkoutsAsync(string UserId)
     {
         return await _db.Where(w => w.UserId == UserId).ToListAsync();
+    }
+    private IQueryable<Workout> ApplyFilters(Specs spec)
+    {
+        return SpecificationsQuery.GetQuery(_db, spec);
+    }
+
+    public async  Task<Workout> GetWorkoutsBySpec(Specs spec)
+    {
+        return await ApplyFilters(spec).FirstOrDefaultAsync()!;
+
     }
 
     public async Task<int> SaveChangesAsync()
