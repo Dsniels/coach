@@ -1,53 +1,40 @@
 
 
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Channels;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using workout.abstractions.Entities;
-using workout.abstractions.Interfaces;
+using workout.logic.Options;
 
 public class ModelService : IModelService
 {
     private readonly IChatClient _client;
+    private readonly Tools _tools;
     private readonly ILogger<ModelService> logger;
-    private readonly IWorkoutRepository _workoutRepository;
 
-    public ModelService(IChatClient client, ILogger<ModelService> logger, IWorkoutRepository workoutRepository)
+    public ModelService(IChatClient client, ILogger<ModelService> logger, Tools tools)
     {
+        _tools = tools;
         _client = client;
         this.logger = logger;
-        _workoutRepository = workoutRepository;
     }
 
     private ChatOptions GetChatOptions()
     {
         return new ChatOptions
         {
+            AllowMultipleToolCalls=true,
             Tools = [
-                AIFunctionFactory.Create(async (IList<WorkoutDto> dtos)=>{
-                    try
-                    {
-                    var res = 0;
-                    foreach(var dto in dtos){
-                        var workout = new Workout{
-                            Ejercicio = dto.Ejercicio,
-                            Sets = dto.Sets,
-                            Repeticiones = dto.Repeticiones,
-                        };
-                        workout.UserId = "testss";
-                        res += await _workoutRepository.CreateWorkoutAsync(workout);
-                    }
-                    return res;
+                AIFunctionFactory.Create(
+                    _tools.CreateWorkout(),
+                    "create_workout",
+                    "Creates a new workout ONLY when the user requests to create, add, or generate a workout . Do not call this for general questions. Creates a workout with these required fields: Ejercicio (string), Repeticiones (int), Sets (int), if sets are not provided set default to 1, al finalizar solo di los ejercicios agregados y da una recomendacion si consideras que fueron pocas repeticiones y poco peso"
+                    ),
+                AIFunctionFactory.Create(
+                    _tools.GetWorkOutByDate(),
+                    "get_workout_by_date",
+                    "Usa esta funcion cuando el usuario te pregunte informacion sobre algun ejercicio que realizo en cierta fecha, el usuario puede decirte la fecha completa o un dia relativo al dia de hoy en dado caso tu saca que dia es hoy y continua con la funcion, al final si la funcion retorna null hazle saber al usuario que no encontro registros con esa fecha o con ese nombre, si la funcion regresa informacion dasela al usuario."
+                )
 
-                    }
-                    catch (System.Exception e)
-                    {
-                        logger.LogError(e.Message);
-                        return 0;
-                    }
-                },"crear_entrenamiento","Creates a new workout ONLY when the user requests to create, add, or generate a workout . Do not call this for general questions. Creates a workout with these required fields: Ejercicio (string), Repeticiones (int), Sets (int), if sets are not provided set default to 1, al finalizar solo di los ejercicios agregados y da una recomendacion si consideras que fueron pocas repeticiones y poco peso")
             ],
 
         };
