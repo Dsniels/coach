@@ -10,7 +10,7 @@ public class Tools
 {
     private readonly HttpContext _context;
     private readonly IWorkoutRepository _workoutRepository;
-    public Tools(HttpContextAccessor context, IWorkoutRepository workoutRepository)
+    public Tools(IHttpContextAccessor context, IWorkoutRepository workoutRepository)
     {
         _context = context.HttpContext;
         _workoutRepository = workoutRepository;
@@ -47,7 +47,9 @@ public class Tools
     {
         return async (specifications) =>
         {
+            Console.WriteLine(specifications.Date.ToString(), specifications.WorkoutName);
             var spec = new Specs(specifications, "testss");
+            Console.WriteLine(spec);
             var workout = await _workoutRepository.GetWorkoutsBySpec(spec);
             return workout;
         };

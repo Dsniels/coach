@@ -10,6 +10,7 @@ using workout.abstractions.Entities;
 using workout.abstractions.Interfaces;
 using workout.abstractions.Interfaces.Services;
 using workout.logic.Context;
+using workout.logic.Options;
 using workout.logic.Repositories;
 using workout.logic.Services;
 
@@ -22,6 +23,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IWorkoutRepository, WorkoutRepository>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<Tools>();
         services.AddScoped<IModelService, ModelService>();
         services.AddChatClient(new OllamaChatClient("http://localhost:11434", "qwen3:1.7b")).UseFunctionInvocation().Build();
         return services;

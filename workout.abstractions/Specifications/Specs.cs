@@ -14,8 +14,8 @@ public class Specs
 
     public Specs(SpecsParams sp, string UserId)
     {
-        Where = x => x.UserId == UserId && x.Ejercicio.Contains(sp.WorkoutName);
-        AddOrderBy(x => x.CreatedAt > sp.Date);
+        Where = x => x.UserId == UserId && x.Ejercicio.Contains(sp.WorkoutName) && DateOnly.FromDateTime(x.CreatedAt) >= DateOnly.FromDateTime(sp.Date);
+        AddOrderBy(x => DateOnly.FromDateTime(x.CreatedAt) >= DateOnly.FromDateTime(sp.Date));
     }
 
 

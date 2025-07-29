@@ -11,11 +11,11 @@ public class SpecificationsQuery
     {
         if (specs.Where != null)
         {
-            query.Where(specs.Where);
+           query = query.Where(specs.Where);
         }
         if (specs.OrderBy != null)
         {
-            query.OrderBy(specs.OrderBy);
+            query = query.OrderBy(specs.OrderBy);
         }
         return query;
     }
