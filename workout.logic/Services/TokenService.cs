@@ -2,7 +2,6 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using workout.abstractions.Entities;
 using workout.abstractions.Interfaces.Services;
@@ -14,13 +13,11 @@ public class TokenService : ITokenService
     private readonly SymmetricSecurityKey _key;
     private string _Issuer;
 
-    public TokenService(IConfiguration configuration)
+    public TokenService(Settings settings)
     {
-
-        var secret = configuration["Token:Key"];
-        _Issuer = configuration["Token:Issuer"]!;
+        var secret = settings.tokenSettings.Key;
+        _Issuer = settings.tokenSettings.Issuer;
         _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-
     }
 
     private List<Claim> GetClaims(User user)
@@ -29,7 +26,6 @@ public class TokenService : ITokenService
         {
             new Claim(JwtRegisteredClaimNames.Name, user.UserName),
         };
-
         return claims;
     }
 

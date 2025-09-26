@@ -1,8 +1,7 @@
-using System;
+using Microsoft.SemanticKernel.Agents.OpenAI;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.WebSockets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.IdentityModel.Tokens;
@@ -13,6 +12,9 @@ using workout.logic.Context;
 using workout.logic.Options;
 using workout.logic.Repositories;
 using workout.logic.Services;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Azure.AI.OpenAI;
+using Azure;
 
 namespace workout.app.ServicesCollections;
 
@@ -29,12 +31,32 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddAgent(this IServiceCollection services)
+    {
+        services.TryAddSingleton<AzureOpenAIClient>(sp =>
+        {
+            var settings = sp.GetRequiredService<Settings>().openAISettings;
+            return OpenAIAssistantAgent.CreateAzureOpenAIClient(new AzureKeyCredential(settings.ApiKey), new Uri(settings.BaseUrl));
+        });
+        services.AddSingleton(services =>
+                services.GetRequiredService<AzureOpenAIClient>().GetAssistantClient()
+        );
+        services.AddSingleton(services =>
+                services.GetRequiredService<AzureOpenAIClient>().GetVectorStoreClient()
+        );
+        services.AddSingleton(services =>
+                services.GetRequiredService<AzureOpenAIClient>().GetOpenAIFileClient()
+        );
+        return services;
+    }
+
 
     public static IServiceCollection AddInfrastucture(this IServiceCollection services, IConfiguration config)
     {
-        var connectionString = config.GetConnectionString("database");
+        services.AddSingleton<Settings>();
+        string ConnectionString = config.GetConnectionString("database")!;
         services.AddSignalR();
-        services.AddDbContext<WorkoutDbContext>(opts => opts.UseNpgsql(connectionString));
+        services.AddDbContext<WorkoutDbContext>(opts => opts.UseAzureSql(ConnectionString));
         return services;
     }
 
@@ -45,15 +67,16 @@ public static class ServiceCollectionExtensions
         builder.AddRoles<IdentityRole>();
         builder.AddEntityFrameworkStores<WorkoutDbContext>();
         builder.AddSignInManager<SignInManager<User>>();
-
+        var sp = services.BuildServiceProvider();
+        var tokenSettings = sp.GetRequiredService<Settings>().tokenSettings;
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(opts =>
         {
             opts.UseSecurityTokenValidators = true;
             opts.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = configuration["Token:Issuer"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Token:Key"])),
+                ValidIssuer = tokenSettings.Issuer,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenSettings.Key)),
                 ValidateIssuer = true,
                 ValidateAudience = true,
             };
