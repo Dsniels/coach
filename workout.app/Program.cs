@@ -8,7 +8,6 @@ public partial class Program
         builder.Services.AddOpenApi();
         builder.Services.AddInfrastucture(builder.Configuration);
         builder.Services.AddSecurity(builder.Configuration);
-        builder.Services.AddSe puto rvices();
 
         var app = builder.Build();
 
