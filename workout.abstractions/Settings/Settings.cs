@@ -9,7 +9,7 @@ public class Settings
 
     public class OpenAISettings
     {
-        public string BaseUrl { get; set; }
+        public string Endpoint { get; set; }
         public string Model { get; set; }
         public string ApiKey { get; set; }
     }
