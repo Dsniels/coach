@@ -10,6 +10,7 @@ using workout.logic.Options;
 public class ModelService : IModelService
 {
     private readonly ILogger<ModelService> logger;
+    private readonly OpenAIAssistantAgent _agent;
     private readonly IServiceProvider _serviceProvider;
 
     public ModelService(AssistantClient assistantClient, ILogger<ModelService> logger, Settings settings, IServiceProvider serviceProvider)
@@ -18,13 +19,13 @@ public class ModelService : IModelService
         _serviceProvider = serviceProvider;
         this.logger = logger;
         var assistant = assistantClient.CreateAssistant(OpenAISettings.Model, GetAssistantOptions());
-        var _agent = new OpenAIAssistantAgent(assistant, assistantClient, GetPlugins());
+        _agent = new OpenAIAssistantAgent(assistant, assistantClient, GetPlugins());
     }
-
 
 
     public async Task AskSomething(Channel<string> channel, Message message)
     {
+
     }
 
     private AssistantCreationOptions GetAssistantOptions()

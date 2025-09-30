@@ -7,15 +7,14 @@ public partial class Program
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddOpenApi();
         builder.Services.AddInfrastucture(builder.Configuration);
+        builder.Services.AddAgent();
+        builder.Services.AddServices();
         builder.Services.AddSecurity(builder.Configuration);
 
         var app = builder.Build();
-
         app.MapOpenApi();
         app.UseHttpsRedirection();
-
         app.MapHub<ServerHub>("server");
-
         app.Run();
     }
 }

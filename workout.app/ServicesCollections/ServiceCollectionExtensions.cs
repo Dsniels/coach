@@ -9,12 +9,12 @@ using workout.abstractions.Entities;
 using workout.abstractions.Interfaces;
 using workout.abstractions.Interfaces.Services;
 using workout.logic.Context;
-using workout.logic.Options;
 using workout.logic.Repositories;
 using workout.logic.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Azure.AI.OpenAI;
 using Azure;
+
 
 namespace workout.app.ServicesCollections;
 
@@ -25,18 +25,20 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IWorkoutRepository, WorkoutRepository>();
         services.AddScoped<ITokenService, TokenService>();
-        services.AddScoped<Tools>();
         services.AddScoped<IModelService, ModelService>();
         services.AddChatClient(new OllamaChatClient("http://localhost:11434", "qwen3:1.7b")).UseFunctionInvocation().Build();
+        services.AddSingleton<ConversationService>();
+        services.AddHostedService<ConversationHostedSvc>();
+
         return services;
     }
 
     public static IServiceCollection AddAgent(this IServiceCollection services)
     {
-        services.TryAddSingleton<AzureOpenAIClient>(sp =>
+        services.AddSingleton<AzureOpenAIClient>(sp =>
         {
             var settings = sp.GetRequiredService<Settings>().openAISettings;
-            return OpenAIAssistantAgent.CreateAzureOpenAIClient(new AzureKeyCredential(settings.ApiKey), new Uri(settings.BaseUrl));
+            return OpenAIAssistantAgent.CreateAzureOpenAIClient(new AzureKeyCredential(settings.ApiKey), new Uri(settings.Endpoint));
         });
         services.AddSingleton(services =>
                 services.GetRequiredService<AzureOpenAIClient>().GetAssistantClient()
@@ -47,6 +49,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(services =>
                 services.GetRequiredService<AzureOpenAIClient>().GetOpenAIFileClient()
         );
+        services.AddSingleton(services => services.GetRequiredService<AzureOpenAIClient>().GetRealtimeClient());
         return services;
     }
 
